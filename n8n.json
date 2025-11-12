@@ -37,3 +37,96 @@
       "name": "Split Topics",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 1,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "query": "={{$json[\"batch\"]}}",
+        "returnAll": false,
+        "limit": 3,
+        "sort": "new"
+      },
+      "id": "4",
+      "name": "Search Reddit Posts",
+      "type": "n8n-nodes-base.reddit",
+      "typeVersion": 2,
+      "position": [860, 300],
+      "credentials": {
+        "redditOAuth2Api": "My Reddit Account"
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
+      "id": "5",
+      "name": "Split Posts",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 1,
+      "position": [1080, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "temperature": 0.7,
+        "maxTokens": 150,
+        "prompt": "You are a friendly Reddit user. Write a short, natural, human-like comment (under 40 words) relevant to this post.\n\nPost Title: {{$json.title}}\nPost Body: {{$json.selftext}}\n\nAvoid emojis or spammy tone. Output only the comment text."
+      },
+      "id": "6",
+      "name": "Generate Draft Comment (AI)",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 2,
+      "position": [1300, 300],
+      "credentials": {
+        "openAiApi": "My OpenAI Account"
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "topic", "value": "={{$json[\"batch\"]}}" },
+            { "name": "post_title", "value": "={{$json[\"title\"]}}" },
+            { "name": "post_url", "value": "={{\"https://www.reddit.com\" + $json[\"permalink\"]}}" },
+            { "name": "ai_comment_draft", "value": "={{$json[\"text\"] || $json[\"choices\"]?.[0]?.message?.content || $json[\"choices\"]?.[0]?.text}}" }
+          ]
+        }
+      },
+      "id": "7",
+      "name": "Prepare Draft Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1520, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "YOUR_GOOGLE_SHEET_ID",
+        "range": "Sheet1!A:D",
+        "options": {
+          "valueInputMode": "RAW"
+        },
+        "fields": "topic,post_title,post_url,ai_comment_draft"
+      },
+      "id": "8",
+      "name": "Save to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 1,
+      "position": [1740, 300],
+      "credentials": {
+        "googleApi": "My Google Sheets Account"
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": { "main": [[ { "node": "Set Topics", "type": "main", "index": 0 } ]] },
+    "Set Topics": { "main": [[ { "node": "Split Topics", "type": "main", "index": 0 } ]] },
+    "Split Topics": { "main": [[ { "node": "Search Reddit Posts", "type": "main", "index": 0 } ]] },
+    "Search Reddit Posts": { "main": [[ { "node": "Split Posts", "type": "main", "index": 0 } ]] },
+    "Split Posts": { "main": [[ { "node": "Generate Draft Comment (AI)", "type": "main", "index": 0 } ]] },
+    "Generate Draft Comment (AI)": { "main": [[ { "node": "Prepare Draft Output", "type": "main", "index": 0 } ]] },
+    "Prepare Draft Output": { "main": [[ { "node": "Save to Google Sheet", "type": "main", "index": 0 } ]] }
+  }
+}
