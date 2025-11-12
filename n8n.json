@@ -1,5 +1,5 @@
 {
-  "name": "Reddit Topic Research + AI Draft Comments",
+  "name": "Reddit Topic Research + AI Draft Comments (Safe)",
   "nodes": [
     {
       "parameters": {},
@@ -13,16 +13,18 @@
       "parameters": {
         "values": {
           "string": [
-            { "name": "topics", "value": "AI Trading, Smart Homes, Electric Vehicles, AI Art, Data Privacy, Stock Market, Productivity Tools, Machine Learning, Crypto, Clean Energy" }
+            {
+              "name": "topics",
+              "value": "AI Trading, Smart Homes, Electric Vehicles, AI Art, Data Privacy, Stock Market, Productivity Tools, Machine Learning, Crypto, Clean Energy"
+            }
           ]
-        },
-        "options": {}
+        }
       },
       "id": "2",
       "name": "Set Topics",
       "type": "n8n-nodes-base.set",
-      "typeVersion": 3,
-      "position": [400, 300]
+      "typeVersion": 1,
+      "position": [420, 300]
     },
     {
       "parameters": {
@@ -34,105 +36,4 @@
       "id": "3",
       "name": "Split Topics",
       "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 2,
-      "position": [600, 300]
-    },
-    {
-      "parameters": {
-        "operation": "search",
-        "query": "={{$json[\"batch\"]}}",
-        "returnAll": false,
-        "limit": 3,
-        "sort": "new"
-      },
-      "id": "4",
-      "name": "Search Reddit Posts",
-      "type": "n8n-nodes-base.reddit",
-      "typeVersion": 2,
-      "position": [800, 300],
-      "credentials": {
-        "redditOAuth2Api": "My Reddit Account"
-      }
-    },
-    {
-      "parameters": {
-        "fieldToSplitOut": "data",
-        "options": {}
-      },
-      "id": "5",
-      "name": "Split Posts",
-      "type": "n8n-nodes-base.splitInBatches",
-      "typeVersion": 2,
-      "position": [1000, 300]
-    },
-    {
-      "parameters": {
-        "model": "gpt-4o-mini",
-        "prompt": "You are a friendly Reddit user. Write a short, natural, human-like comment (under 40 words) relevant to this post.\nPost Title: {{$json.title}}\nPost Body: {{$json.selftext}}\nAvoid emojis or spammy tone. Output only the comment text."
-      },
-      "id": "6",
-      "name": "Generate Draft Comment (AI)",
-      "type": "n8n-nodes-base.openAi",
-      "typeVersion": 2,
-      "position": [1200, 300],
-      "credentials": {
-        "openAiApi": "My OpenAI Account"
-      }
-    },
-    {
-      "parameters": {
-        "values": {
-          "string": [
-            { "name": "topic", "value": "={{$json[\"batch\"]}}" },
-            { "name": "post_title", "value": "={{$json[\"title\"]}}" },
-            { "name": "post_url", "value": "={{\"https://www.reddit.com\" + $json[\"permalink\"]}}" },
-            { "name": "ai_comment_draft", "value": "={{$json[\"text\"]}}" }
-          ]
-        },
-        "options": {}
-      },
-      "id": "7",
-      "name": "Prepare Draft Output",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3,
-      "position": [1400, 300]
-    },
-    {
-      "parameters": {
-        "operation": "append",
-        "sheetId": "YOUR_GOOGLE_SHEET_ID",
-        "range": "A:D",
-        "options": {
-          "valueInputMode": "RAW"
-        },
-        "fields": "topic, post_title, post_url, ai_comment_draft"
-      },
-      "id": "8",
-      "name": "Save to Google Sheet",
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 2,
-      "position": [1600, 300],
-      "credentials": {
-        "googleApi": "My Google Sheets Account"
-      }
-    }
-  ],
-  "connections": {
-    "Manual Trigger": {
-      "main": [
-        [
-          {
-            "node": "Set Topics",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set Topics": {
-      "main": [
-        [
-          {
-            "node": "Split Topics",
-            "type": "main",
-            "in
+      "typeVersion": 1,
